@@ -6,9 +6,21 @@
 @prefix asc:     <http://aaronland.info/ns/changefile/> .
                                      
 <>
-        dc:identifier           "$Id: Changes,v 1.5 2007/09/13 14:50:29 asc Exp $" ;
+        dc:identifier           "$Id: Changes,v 1.7 2008/01/20 21:23:38 asc Exp $" ;
         dc:description          "Changes for Flickr::Upload::Dopplr.pm" ;
         dcterms:references      <http://aaronland.info/perl/flickr/upload/dopplr/> .
+
+<http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.2.tar.gz>
+        dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;
+        dcterms:replaces    <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.1.tar.gz>
+
+        doap:Version    [
+                        doap:revision     "0.2" ;
+                        doap:created      "2008-01-21" ;
+                        ];
+        asc:changes     [
+                        asc:update        "Fetch Flickr Places ID for Geonames city ID and add as machine tag" ;
+                        ] .
 
 <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.1.tar.gz>
         dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;

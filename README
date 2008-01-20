@@ -18,35 +18,43 @@ SYNOPSIS
                                      'auth_token' => 'O RLY');
 
 DESCRIPTION
-    A Flickr::Upload subclass to assign location information using Dopplr.
+    Flickr::Upload subclass to assign location information using Dopplr.
 
     Specifically, the package will query Dopplr for the current location of
-    the user associated with *$dopplr_authtoken* and assign the city name as
-    a tag and a machinetag with the Geonames.org ID for that city.
-
-    If the Dopplr API thinks that it is a "travel day" another machine tag
-    (dopplr:trip=) will be added containing the numeric identifier for that
-    trip.
+    the user associated with *$dopplr_authtoken* and assign the following
+    tags for the name of the city a machinetag representing the Geonames.org
+    ID for that city.
 
     If the package is able to query a photo's EXIF data and read the
     *DateTimeOriginal* field that value will be used to query Dopplr for
     your location on that day.
 
+    It will also try to resolve a corresponding Flickr Places ID for the
+    Geonames city ID returned by Dopplr. For example, Geonames ID *5391959*
+    becomes *San Francisco, California, United States* which becomes Flickr
+    Places ID *kH8dLOubBZRvX_YZ*.
+
+    (Or in machinetag-speak, *places:locality=kH8dLOubBZRvX_YZ*)
+
+    If, when the photo is uploaded, the Dopplr API thinks that it is a
+    "travel day" another machine tag (dopplr:trip=) will be added containing
+    the numeric identifier for that trip.
+
     If an upload is successful, the package will attempt to assign latitude
     and longitude information for the photo with a Flickr accuracy of 11 (or
-    "city") and, optionally, set geo permissions specific to that photo.
+    "city").
 
 ERROR HANDLING
-    Flickr::Upload::Dopplr uses Error.pm to catch and throw exceptions.
-    Although this is still a mostly un-Perl-ish way of doing things, it
-    seemed like the most sensible way to handle the variety of possible
-    error conditions. I don't love it but we'll see.
+    Flickr::Upload::Dopplr subclasses Error.pm to catch and throw
+    exceptions. Although this is still a mostly un-Perl-ish way of doing
+    things, it seemed like the most sensible way to handle the variety of
+    error cases. I don't love it but we'll see.
 
     This means that the library will throw fatal exceptions and you will
     need to code around it using either *eval* or - even better - *try* and
     *catch* blocks.
 
-    There are four package-specific exception handlers :
+    There are four package specific exception handlers :
 
     * FUDException
         An error condition specific to *Flickr::Upload::Dopplr* was
@@ -75,12 +83,12 @@ CAVEATS
     *   Asynchronous uploads are not support and will trigger an exception.
 
     *   At the moment, the package does not check to see whether geo
-        information was already assigned (for example, via GPS EXIF data).
-        This will be fixed in future releases.
+        information was already assigned (for example, via GPS EXIF data)
+        nor does it issue and error reporting if there was a problem
+        assigning geo information.
 
 PACKAGE METHODS
   __PACKAGE__->new(\%args)
-
     All the same arguments required by the *Flickr::Upload* constructor plus
     the following :
 
@@ -111,11 +119,8 @@ PACKAGE METHODS
 
 OBJECT METHODS YOU SHOULD CARE ABOUT
   $obj->upload(%args)
-
-    Nothing you wouldn't pass the Flickr::Upload *upload* method.
-
-    Except for the part where the *async* flag which is not honoured. I'm
-    working on it.
+    Nothing you wouldn't pass the Flickr::Upload *upload* method. Except the
+    *async* flag which is not honoured yet. I'm working on it.
 
     In additional, you may pass an optional *geo* parameter. It must be a
     hash reference with the following keys :
@@ -131,10 +136,10 @@ OBJECT METHODS YOU SHOULD CARE ABOUT
     Returns a photo ID!
 
 VERSION
-    0.1
+    0.2
 
 DATE
-    $Date: 2007/09/13 14:50:29 $
+    $Date: 2008/01/20 21:52:09 $
 
 AUTHOR
     Aaron Straup Cope <ascope@cpan.org>
@@ -148,13 +153,15 @@ SEE ALSO
 
     Error
 
-    http://www.aaronland.info/weblog/2007/08/24/aware/#reduced
+    <http://www.aaronland.info/weblog/2007/08/24/aware/#reduced>
+
+    <http://laughingmeme.org/2008/01/18/flickr-place-ids/>
 
 BUGS
     Please report all bugs via http://rt.cpan.org/
 
 LICENSE
-    Copyright (c) 2007 Aaron Straup Cope. All Rights Reserved.
+    Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved.
 
     This is free software. You may redistribute it and/or modify it under
     the same terms as Perl itself.

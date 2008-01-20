@@ -1,4 +1,4 @@
-# $Id: Dopplr.pm,v 1.10 2007/09/13 14:50:29 asc Exp $
+# $Id: Dopplr.pm,v 1.13 2008/01/20 21:52:09 asc Exp $
 
 use strict;
 
@@ -69,7 +69,7 @@ use base qw (FUDException);
 package Flickr::Upload::Dopplr;
 use base qw (Flickr::Upload);
 
-$Flickr::Upload::Dopplr::VERSION = '0.1';
+$Flickr::Upload::Dopplr::VERSION = '0.2';
 
 =head1 NAME
 
@@ -93,32 +93,39 @@ Flickr::Upload::Dopplr - Flickr::Upload subclass to assign location information 
 
 =head1 DESCRIPTION
 
-A Flickr::Upload subclass to assign location information using Dopplr.
+Flickr::Upload subclass to assign location information using Dopplr.
 
 Specifically, the package will query Dopplr for the current location of the
-user associated with I<$dopplr_authtoken> and assign the city name as a tag
-and a machinetag with the Geonames.org ID for that city.
-
-If the Dopplr API thinks that it is a "travel day" another machine tag (dopplr:trip=)
-will be added containing the numeric identifier for that trip.
+user associated with I<$dopplr_authtoken> and assign the following tags for
+the name of the city a machinetag representing the Geonames.org ID for that
+city.
 
 If the package is able to query a photo's EXIF data and read the I<DateTimeOriginal>
 field that value will be used to query Dopplr for your location on that day.
 
+It will also try to resolve a corresponding Flickr Places ID for the Geonames
+city ID returned by Dopplr. For example, Geonames ID I<5391959> becomes
+I<San Francisco, California, United States> which becomes Flickr Places ID I<kH8dLOubBZRvX_YZ>.
+
+(Or in machinetag-speak, I<places:locality=kH8dLOubBZRvX_YZ>)
+
+If, when the photo is uploaded, the Dopplr API thinks that it is a "travel
+day" another machine tag (dopplr:trip=) will be added containing the numeric
+identifier for that trip.
+
 If an upload is successful, the package will attempt to assign latitude and
-longitude information for the photo with a Flickr accuracy of 11 (or "city") and,
-optionally, set geo permissions specific to that photo.
+longitude information for the photo with a Flickr accuracy of 11 (or "city").
 
 =head1 ERROR HANDLING
 
-Flickr::Upload::Dopplr uses Error.pm to catch and throw exceptions. Although
+Flickr::Upload::Dopplr subclasses Error.pm to catch and throw exceptions. Although
 this is still a mostly un-Perl-ish way of doing things, it seemed like the most sensible
-way to handle the variety of possible error conditions. I don't love it but we'll see.
+way to handle the variety of error cases. I don't love it but we'll see.
 
 This means that the library B<will throw fatal exceptions> and you will need to
 code around it using either I<eval> or - even better - I<try> and I<catch> blocks.
 
-There are four package-specific exception handlers :
+There are four package specific exception handlers :
 
 =over 4
 
@@ -167,8 +174,8 @@ Asynchronous uploads are not support and will trigger an exception.
 =item * 
 
 At the moment, the package does not check to see whether geo information was
-already assigned (for example, via GPS EXIF data). This will be fixed in future
-releases.
+already assigned (for example, via GPS EXIF data) nor does it issue and error
+reporting if there was a problem assigning geo information.
 
 =back
 
@@ -177,6 +184,8 @@ releases.
 use Net::Dopplr;
 use Image::Info qw (image_info);
 use Error qw(:try);
+use LWP::Simple;
+use XML::XPath;
 
 $Error::Debug = 1;
 
@@ -260,6 +269,7 @@ sub new {
         };
 
         $self->{'__dargs'} = $dargs;
+        $self->{'__places'} = {};
 
         return $self;
 }
@@ -268,10 +278,8 @@ sub new {
 
 =head2 $obj->upload(%args)
 
-Nothing you wouldn't pass the Flickr::Upload I<upload> method.
-
-Except for the part where the I<async> flag which is not honoured. I'm working
-on it.
+Nothing you wouldn't pass the Flickr::Upload I<upload> method. Except the
+I<async> flag which is not honoured yet. I'm working on it.
 
 In additional, you may pass an optional I<geo> parameter. It must be a hash
 reference with the following keys :
@@ -322,6 +330,10 @@ sub upload {
         $args{'tags'} .= sprintf(" \"%s\"", $self->tagify($city->{'name'}));
         $args{'tags'} .= sprintf(" geonames:locality=%d", $city->{'geoname_id'});
         
+        if (my $place = $self->geonames_id_to_places_id($city->{'geoname_id'})){
+                $args{'tags'} .= sprintf(" places:%s=%s", $place->{'type'}, $place->{'id'});
+        }
+
         if ($city->{'tripid'}){
                 $args{'tags'} .= sprintf(" dopplr:trip=%d", $city->{'tripid'});
         }       
@@ -489,6 +501,77 @@ sub tagify_like_delicious {
         return lc($tag);
 }
 
+sub geonames_id_to_places_id {
+        my $self = shift;
+        my $geonames_id = shift;
+
+        if (exists($self->{'__places'}->{$geonames_id})){
+                return $self->{'__places'}->{$geonames_id};
+        }
+
+        # sort out error handling...not that important, really...
+
+        my $url = "http://ws.geonames.org/hierarchy?geonameId=" . $geonames_id;
+
+        my $gn_xml = get($url);
+        my $gn_xp = undef;
+
+        eval {
+                $gn_xp = XML::XPath->new('xml' => $gn_xml);
+        };
+
+        if ($@){
+                warn $@;
+                return undef;
+        }
+        
+        my $locality = ($gn_xp->findnodes("*//geoname[fcode='PPL']"))[0];
+        my $region = ($gn_xp->findnodes("*//geoname[fcode='ADM1']"))[0];
+        my $country = ($gn_xp->findnodes("*//geoname[fcode='PCLI']"))[0];
+
+        my @parts = ();
+
+        foreach my $pl ($locality, $region, $country){
+
+                if ($pl){
+                        push @parts, $pl->findvalue("name");
+                }
+        }
+
+        my $query = join(", ", @parts);
+
+        if (! $query){
+                return undef;
+        }
+
+        my $place_id = undef;
+        my $place_type = undef;
+
+        eval {
+                my $fl = Flickr::API->new({'key' => $self->{'api_key'}});
+                my $res = $fl->execute_method('flickr.places.find', {'query' => $query});
+                
+                my $fl_xml = $res->content();
+                my $fl_xp = XML::XPath->new('xml' => $fl_xml);
+
+                # Wait to see if any more actual magic is required...
+
+                my @places = $fl_xp->findnodes("/rsp/places/place");
+                my $place = $places[0];
+
+                $place_id = $place->getAttribute("place_id");
+                $place_type = $place->getAttribute("place_type");
+        };
+
+        if ($@){
+                warn $@;
+                return undef;
+        }
+
+        $self->{'__places'}->{$geonames_id} = {'id' => $place_id, 'type' => $place_type};
+        return $self->{'__places'}->{$geonames_id};
+}
+
 sub flickr_api_call {
         my $self = shift;
         my $meth = shift;
@@ -516,11 +599,11 @@ sub flickr_api_call {
 
 =head1 VERSION
 
-0.1
+0.2
 
 =head1 DATE
 
-$Date: 2007/09/13 14:50:29 $
+$Date: 2008/01/20 21:52:09 $
 
 =head1 AUTHOR
 
@@ -538,13 +621,15 @@ L<Error>
 
 L<http://www.aaronland.info/weblog/2007/08/24/aware/#reduced>
 
+L<http://laughingmeme.org/2008/01/18/flickr-place-ids/>
+
 =head1 BUGS
 
 Please report all bugs via http://rt.cpan.org/
 
 =head1 LICENSE
 
-Copyright (c) 2007 Aaron Straup Cope. All Rights Reserved.
+Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved.
 
 This is free software. You may redistribute it and/or
 modify it under the same terms as Perl itself.

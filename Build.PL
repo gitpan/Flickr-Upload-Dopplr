@@ -1,4 +1,4 @@
-# $Id: Build.PL,v 1.3 2007/09/11 05:23:11 asc Exp $
+# $Id: Build.PL,v 1.4 2008/01/20 21:21:31 asc Exp $
 
 use strict;
 use Module::Build;
@@ -12,6 +12,8 @@ my $build = Module::Build->new(module_name => 'Flickr::Upload::Dopplr',
                                             'Flickr::Upload' => '>= 1.25',
                                             'Net::Dopplr' => '>= 0.2',
                                             'Image::Info' => '0',
+                                            'LWP::Simple' => 0,
+                                            'XML::XPath' => 0,
 			       },
 			       build_requires => {
 				   'Test::Simple'              => '>= 0.47',

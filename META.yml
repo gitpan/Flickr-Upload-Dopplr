@@ -1,6 +1,6 @@
 ---
 name: Flickr-Upload-Dopplr
-version: 0.1
+version: 0.2
 author:
   - 'Aaron Straup Cope <ascope@cpan.org>'
 abstract: Flickr::Upload subclass to assign location information using Dopplr
@@ -10,7 +10,9 @@ resources:
 requires:
   Flickr::Upload: '>= 1.25'
   Image::Info: 0
+  LWP::Simple: 0
   Net::Dopplr: '>= 0.2'
+  XML::XPath: 0
 build_requires:
   Test::Simple: '>= 0.47'
 provides:
@@ -18,7 +20,7 @@ provides:
     file: lib/Flickr/Upload/Dopplr.pm
   Flickr::Upload::Dopplr:
     file: lib/Flickr/Upload/Dopplr.pm
-    version: 0.1
+    version: 0.2
   FlickrAPIException:
     file: lib/Flickr/Upload/Dopplr.pm
   FlickrUploadException:
