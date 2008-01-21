@@ -1,4 +1,4 @@
-# $Id: Dopplr.pm,v 1.13 2008/01/20 21:52:09 asc Exp $
+# $Id: Dopplr.pm,v 1.14 2008/01/20 23:36:27 asc Exp $
 
 use strict;
 
@@ -69,7 +69,7 @@ use base qw (FUDException);
 package Flickr::Upload::Dopplr;
 use base qw (Flickr::Upload);
 
-$Flickr::Upload::Dopplr::VERSION = '0.2';
+$Flickr::Upload::Dopplr::VERSION = '0.21';
 
 =head1 NAME
 
@@ -599,11 +599,11 @@ sub flickr_api_call {
 
 =head1 VERSION
 
-0.2
+0.21
 
 =head1 DATE
 
-$Date: 2008/01/20 21:52:09 $
+$Date: 2008/01/20 23:36:27 $
 
 =head1 AUTHOR
 

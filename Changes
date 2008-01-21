@@ -6,9 +6,21 @@
 @prefix asc:     <http://aaronland.info/ns/changefile/> .
                                      
 <>
-        dc:identifier           "$Id: Changes,v 1.7 2008/01/20 21:23:38 asc Exp $" ;
+        dc:identifier           "$Id: Changes,v 1.8 2008/01/20 23:36:27 asc Exp $" ;
         dc:description          "Changes for Flickr::Upload::Dopplr.pm" ;
         dcterms:references      <http://aaronland.info/perl/flickr/upload/dopplr/> .
+
+<http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.21.tar.gz>
+        dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;
+        dcterms:replaces    <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.2.tar.gz>
+
+        doap:Version    [
+                        doap:revision     "0.21" ;
+                        doap:created      "2008-01-21" ;
+                        ];
+        asc:changes     [
+                        asc:bugfix        "Add Error.pm to the Build.PL list" ;
+                        ] .
 
 <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.2.tar.gz>
         dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;
