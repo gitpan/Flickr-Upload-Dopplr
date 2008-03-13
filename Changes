@@ -6,9 +6,21 @@
 @prefix asc:     <http://aaronland.info/ns/changefile/> .
                                      
 <>
-        dc:identifier           "$Id: Changes,v 1.8 2008/01/20 23:36:27 asc Exp $" ;
+        dc:identifier           "$Id: Changes,v 1.9 2008/03/13 16:35:15 asc Exp $" ;
         dc:description          "Changes for Flickr::Upload::Dopplr.pm" ;
         dcterms:references      <http://aaronland.info/perl/flickr/upload/dopplr/> .
+
+<http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.3.tar.gz>
+        dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;
+        dcterms:replaces    <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.21.tar.gz>
+
+        doap:Version    [
+                        doap:revision     "0.3" ;
+                        doap:created      "2008-03-13" ;
+                        ];
+        asc:changes     [
+                        asc:bugfix        "Do not call photos.geo.setLocation if the photo itself has GPS/EXIF" ;
+                        ] .
 
 <http://aaronland.info/perl/flickr/upload/dopplr/Flickr/Upload/Dopplr-0.21.tar.gz>
         dcterms:isVersionOf <http://aaronland.info/perl/flickr/upload/dopplr/> ;

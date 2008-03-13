@@ -136,10 +136,10 @@ OBJECT METHODS YOU SHOULD CARE ABOUT
     Returns a photo ID!
 
 VERSION
-    0.21
+    0.3
 
 DATE
-    $Date: 2008/01/20 23:36:27 $
+    $Date: 2008/03/13 16:35:15 $
 
 AUTHOR
     Aaron Straup Cope <ascope@cpan.org>

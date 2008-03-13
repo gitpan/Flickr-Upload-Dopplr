@@ -1,4 +1,4 @@
-# $Id: Dopplr.pm,v 1.14 2008/01/20 23:36:27 asc Exp $
+# $Id: Dopplr.pm,v 1.15 2008/03/13 16:35:15 asc Exp $
 
 use strict;
 
@@ -69,7 +69,7 @@ use base qw (FUDException);
 package Flickr::Upload::Dopplr;
 use base qw (Flickr::Upload);
 
-$Flickr::Upload::Dopplr::VERSION = '0.21';
+$Flickr::Upload::Dopplr::VERSION = '0.3';
 
 =head1 NAME
 
@@ -350,16 +350,35 @@ sub upload {
                 throw FlickrUploadException("Flickr::Upload did not return a photo ID");
         }
 
+        #
+        # Check to see if the photo has GPS info
+        # (this will be picked up by the Flickr upload wah-wah)
+        #
+
+        my $has_gps = 0;
+
+        eval {
+                my $info = image_info($args{'photo'});
+
+                if (($info) && (ref($info->{'GPSLatitude'}))){
+                    $has_gps = 1;
+                }
+        };
+
         # 
+        # Set GPS by city
+        #
 
-        my %set = ('accuracy' => 11,
-                   'lat' => $city->{'latitude'},
-                   'lon' => $city->{'longitude'},
-                   'auth_token' => $args{'auth_token'},
-                   'photo_id' => $id);
+        if (! $has_gps){
+                my %set = ('accuracy' => 11,
+                           'lat' => $city->{'latitude'},
+                           'lon' => $city->{'longitude'},
+                           'auth_token' => $args{'auth_token'},
+                           'photo_id' => $id);
+                
+                $self->flickr_api_call('flickr.photos.geo.setLocation', \%set);
+        }
 
-        $self->flickr_api_call('flickr.photos.geo.setLocation', \%set);
-        
         #
 
         if (exists($geo->{'perms'})){
@@ -551,7 +570,7 @@ sub geonames_id_to_places_id {
                 my $fl = Flickr::API->new({'key' => $self->{'api_key'}});
                 my $res = $fl->execute_method('flickr.places.find', {'query' => $query});
                 
-                my $fl_xml = $res->content();
+                my $fl_xml = $res->decoded_content();
                 my $fl_xp = XML::XPath->new('xml' => $fl_xml);
 
                 # Wait to see if any more actual magic is required...
@@ -599,11 +618,11 @@ sub flickr_api_call {
 
 =head1 VERSION
 
-0.21
+0.3
 
 =head1 DATE
 
-$Date: 2008/01/20 23:36:27 $
+$Date: 2008/03/13 16:35:15 $
 
 =head1 AUTHOR
 
